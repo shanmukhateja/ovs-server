@@ -1,6 +1,7 @@
 import { getRepository } from "typeorm";
 import { Post } from "../db/entity/post";
 import { PostScore } from "../db/entity/post_score";
+import { User } from "../db/entity/user";
 
 export async function handleGetAllPosts(user_id) {
   const postRepo = getRepository(Post)
@@ -38,6 +39,19 @@ export async function handlePostScore(post_id, user_id, post_score) {
   } else {
     // downvote
     post_score = -1
+  }
+
+  // check if user eligible for voting
+  const userRepo = getRepository(User)
+  const userInfo = await userRepo.findOne({
+    where: {id: user_id}
+  })
+  if(!userInfo) {
+    throw new Error('User account doesn\'t exist')
+  }
+  if(userInfo.user_type == 0) {
+    // admins not allowed to vote
+    throw new Error('Not allowed.')
   }
   const postScoreRepo = getRepository(PostScore)
   let postScoreData = null

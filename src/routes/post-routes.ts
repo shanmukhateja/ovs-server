@@ -33,7 +33,13 @@ postRouter.post('/updateScore', [
 
     handlePostScore(post_id, user_id, post_score)
       .then(_ => res.send({ status: 'OKAY' }))
-      .catch(err => handleError(err, res))
+      .catch(err => {
+        console.error(err)
+        res.send({
+          status: 'FAIL',
+          error: err.message
+        })
+      })
   }
 })
 
