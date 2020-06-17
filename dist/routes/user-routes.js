@@ -19,7 +19,13 @@ exports.userRouter.post('/login', [
         const password = req.body.password;
         UserController_1.handleUserLogin(userName, password)
             .then(data => res.send({ status: 'OKAY', data }))
-            .catch(err => BaseController_1.handleError(err, res));
+            .catch(err => {
+            console.error(err);
+            res.send({
+                status: 'FAIL',
+                error: err
+            });
+        });
     }
 });
 exports.userRouter.post('/add', [

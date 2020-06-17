@@ -20,7 +20,13 @@ userRouter.post('/login', [
 
       handleUserLogin(userName, password)
       .then(data => res.send({status: 'OKAY', data}))
-      .catch(err => handleError(err, res))
+      .catch(err => {
+        console.error(err)
+        res.send({
+          status: 'FAIL',
+          error: err
+        })
+      })
   }
 })
 
