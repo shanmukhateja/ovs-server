@@ -5,8 +5,8 @@
   "username": "root",
   "password": "",
   "database": "ovs-db",
-  "synchronize": false,
-  "logging": true,
+  "synchronize": true,
+  "logging": false,
   "entities": [
     "dist/db/entity/**/*.js"
   ],
