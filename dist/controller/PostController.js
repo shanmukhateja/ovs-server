@@ -12,15 +12,28 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const typeorm_1 = require("typeorm");
 const post_1 = require("../db/entity/post");
 const post_score_1 = require("../db/entity/post_score");
-function handleGetAllPosts() {
-    const postRepo = typeorm_1.getRepository(post_1.Post);
-    const builder = postRepo.createQueryBuilder('posts');
-    return builder
-        .innerJoin('posts.user_id', 'user')
-        .addSelect(['user.id', 'user.name']) // we only want user's name and id
-        .where('posts.user_id = user.id')
-        .orderBy('posts.created_at', 'DESC')
-        .getMany();
+function handleGetAllPosts(user_id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const postRepo = typeorm_1.getRepository(post_1.Post);
+        const postScoreRepo = typeorm_1.getRepository(post_score_1.PostScore);
+        const builder = postRepo.createQueryBuilder('posts');
+        return builder
+            .innerJoin('posts.user_id', 'user')
+            .addSelect(['user.id', 'user.name']) // we only want user's name and id
+            .where('posts.user_id = user.id')
+            .orderBy('posts.created_at', 'DESC')
+            .getMany()
+            // attach user's tbl_post_scores info so client can update UI.
+            .then(data => Promise.all(data.map(el => postScoreRepo.findOne({
+            where: {
+                post_id: el.id,
+                user_id
+            }
+        })
+            .then(data => {
+            return Object.assign(Object.assign({}, el), { user_post_score: data === null || data === void 0 ? void 0 : data.post_score });
+        }))));
+    });
 }
 exports.handleGetAllPosts = handleGetAllPosts;
 function handlePostScore(post_id, user_id, post_score) {

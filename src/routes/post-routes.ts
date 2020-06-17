@@ -6,7 +6,8 @@ import { handleError } from "../controller/BaseController";
 export const postRouter = Router()
 
 postRouter.get('', (req, res) => {
-  handleGetAllPosts()
+  const { user_id } = req.query
+  handleGetAllPosts(user_id)
     .then(data => {
       res.send({
         status: 'OKAY',

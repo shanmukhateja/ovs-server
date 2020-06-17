@@ -6,7 +6,8 @@ const PostController_1 = require("../controller/PostController");
 const BaseController_1 = require("../controller/BaseController");
 exports.postRouter = express_1.Router();
 exports.postRouter.get('', (req, res) => {
-    PostController_1.handleGetAllPosts()
+    const { user_id } = req.query;
+    PostController_1.handleGetAllPosts(user_id)
         .then(data => {
         res.send({
             status: 'OKAY',

@@ -2,8 +2,9 @@ import { getRepository } from "typeorm";
 import { Post } from "../db/entity/post";
 import { PostScore } from "../db/entity/post_score";
 
-export function handleGetAllPosts() {
+export async function handleGetAllPosts(user_id) {
   const postRepo = getRepository(Post)
+  const postScoreRepo = getRepository(PostScore)
   const builder = postRepo.createQueryBuilder('posts')
 
   return builder
@@ -12,6 +13,21 @@ export function handleGetAllPosts() {
     .where('posts.user_id = user.id')
     .orderBy('posts.created_at', 'DESC')
     .getMany()
+    // attach user's tbl_post_scores info so client can update UI.
+    .then(data => Promise.all(data.map(el => postScoreRepo.findOne({
+          where: {
+            post_id: el.id,
+            user_id
+          }
+        })
+        .then(data => {
+          return {
+            ...el,
+            user_post_score: data?.post_score
+          }
+        })
+      )
+    ))
 }
 
 export async function handlePostScore(post_id, user_id, post_score) {
@@ -54,7 +70,7 @@ export async function handlePostScore(post_id, user_id, post_score) {
     const { sum } = await postScoreRepo
       .createQueryBuilder('post_scores')
       .select('SUM(post_score)', 'sum')
-      .where('post_scores.post_id = :post_id', {post_id})
+      .where('post_scores.post_id = :post_id', { post_id })
       .getRawOne()
 
     return postRepo.createQueryBuilder()
@@ -62,7 +78,7 @@ export async function handlePostScore(post_id, user_id, post_score) {
       .set({
         post_counter: sum
       })
-      .where('id = :post_id', {post_id})
+      .where('id = :post_id', { post_id })
       .execute()
 
   } catch (err) {
