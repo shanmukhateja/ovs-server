@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { validationResult, check } from "express-validator";
-import { handleUpvote, handlePostCreate, handleGetAllPosts } from "../controller/PostController";
+import { handlePostScore, handlePostCreate, handleGetAllPosts } from "../controller/PostController";
 import { handleError } from "../controller/BaseController";
 
 export const postRouter = Router()
@@ -30,7 +30,7 @@ postRouter.post('/updateScore', [
   } else {
     const { post_id, user_id, post_score } = req.body
 
-    handleUpvote(post_id, user_id, post_score)
+    handlePostScore(post_id, user_id, post_score)
       .then(_ => res.send({ status: 'OKAY' }))
       .catch(err => handleError(err, res))
   }

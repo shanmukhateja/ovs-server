@@ -5,18 +5,18 @@ import { PostScore } from "../db/entity/post_score";
 export function handleGetAllPosts() {
   const postRepo = getRepository(Post)
   const builder = postRepo.createQueryBuilder('posts')
-  
+
   return builder
-  .innerJoin('posts.user_id', 'user')
-  .addSelect(['user.id', 'user.name']) // we only want user's name and id
-  .where('posts.user_id = user.id')
-  .orderBy('posts.created_at', 'DESC')
-  .getMany()
+    .innerJoin('posts.user_id', 'user')
+    .addSelect(['user.id', 'user.name']) // we only want user's name and id
+    .where('posts.user_id = user.id')
+    .orderBy('posts.created_at', 'DESC')
+    .getMany()
 }
 
-export async function handleUpvote(post_id, user_id, post_score) {
+export async function handlePostScore(post_id, user_id, post_score) {
   // translate `post_score` bool to int
-  if(post_score) {
+  if (post_score === 'true') {
     // upvote
     post_score = 1
   } else {
@@ -36,7 +36,7 @@ export async function handleUpvote(post_id, user_id, post_score) {
     })
     if (!postScoreData) {
       // create row for this post for this user
-      postScoreData = await postScoreRepo.create({
+      postScoreData = await postScoreRepo.save({
         id: null,
         post_id,
         post_score,
@@ -50,8 +50,21 @@ export async function handleUpvote(post_id, user_id, post_score) {
 
     // recount post score in post table
     const postRepo = getRepository(Post)
-    
-    return postRepo.query(`UPDATE "${postRepo.metadata.tableName}" SET post_counter = (SELECT SUM(post_score) FROM "${postScoreRepo.metadata.tableName}" WHERE post_id = ${post_id});`)
+
+    const { sum } = await postScoreRepo
+      .createQueryBuilder('post_scores')
+      .select('SUM(post_score)', 'sum')
+      .where('post_scores.post_id = :post_id', {post_id})
+      .getRawOne()
+
+    return postRepo.createQueryBuilder()
+      .update()
+      .set({
+        post_counter: sum
+      })
+      .where('id = :post_id', {post_id})
+      .execute()
+
   } catch (err) {
     console.error(err)
   }

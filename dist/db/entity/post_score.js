@@ -20,11 +20,11 @@ __decorate([
     __metadata("design:type", Number)
 ], PostScore.prototype, "id", void 0);
 __decorate([
-    typeorm_1.OneToOne(type => post_1.Post),
+    typeorm_1.ManyToOne(type => post_1.Post, post => post.id),
     __metadata("design:type", Number)
 ], PostScore.prototype, "post_id", void 0);
 __decorate([
-    typeorm_1.OneToOne(type => user_1.User),
+    typeorm_1.ManyToOne(type => user_1.User, user => user.id),
     __metadata("design:type", Number)
 ], PostScore.prototype, "user_id", void 0);
 __decorate([

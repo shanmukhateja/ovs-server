@@ -29,7 +29,7 @@ exports.postRouter.post('/updateScore', [
     }
     else {
         const { post_id, user_id, post_score } = req.body;
-        PostController_1.handleUpvote(post_id, user_id, post_score)
+        PostController_1.handlePostScore(post_id, user_id, post_score)
             .then(_ => res.send({ status: 'OKAY' }))
             .catch(err => BaseController_1.handleError(err, res));
     }

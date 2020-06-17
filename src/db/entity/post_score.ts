@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, OneToOne, Column } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, OneToOne, Column, ManyToOne } from "typeorm";
 import { Post } from './post'
 import { User } from "./user";
 import { BaseModel } from "./base";
@@ -9,10 +9,10 @@ export class PostScore extends BaseModel {
   @PrimaryGeneratedColumn()
   id: number
 
-  @OneToOne(type => Post)
+  @ManyToOne(type => Post, post => post.id)
   post_id: number
 
-  @OneToOne(type => User)
+  @ManyToOne(type => User, user => user.id)
   user_id: number
 
   @Column()

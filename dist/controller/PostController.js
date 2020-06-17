@@ -23,10 +23,10 @@ function handleGetAllPosts() {
         .getMany();
 }
 exports.handleGetAllPosts = handleGetAllPosts;
-function handleUpvote(post_id, user_id, post_score) {
+function handlePostScore(post_id, user_id, post_score) {
     return __awaiter(this, void 0, void 0, function* () {
         // translate `post_score` bool to int
-        if (post_score) {
+        if (post_score === 'true') {
             // upvote
             post_score = 1;
         }
@@ -46,7 +46,7 @@ function handleUpvote(post_id, user_id, post_score) {
             });
             if (!postScoreData) {
                 // create row for this post for this user
-                postScoreData = yield postScoreRepo.create({
+                postScoreData = yield postScoreRepo.save({
                     id: null,
                     post_id,
                     post_score,
@@ -60,14 +60,25 @@ function handleUpvote(post_id, user_id, post_score) {
             }
             // recount post score in post table
             const postRepo = typeorm_1.getRepository(post_1.Post);
-            return postRepo.query(`UPDATE "${postRepo.metadata.tableName}" SET post_counter = (SELECT SUM(post_score) FROM "${postScoreRepo.metadata.tableName}" WHERE post_id = ${post_id});`);
+            const { sum } = yield postScoreRepo
+                .createQueryBuilder('post_scores')
+                .select('SUM(post_score)', 'sum')
+                .where('post_scores.post_id = :post_id', { post_id })
+                .getRawOne();
+            return postRepo.createQueryBuilder()
+                .update()
+                .set({
+                post_counter: sum
+            })
+                .where('id = :post_id', { post_id })
+                .execute();
         }
         catch (err) {
             console.error(err);
         }
     });
 }
-exports.handleUpvote = handleUpvote;
+exports.handlePostScore = handlePostScore;
 function handlePostCreate(topic_id, title, description, user_id) {
     return __awaiter(this, void 0, void 0, function* () {
         const postRepo = typeorm_1.getRepository(post_1.Post);
