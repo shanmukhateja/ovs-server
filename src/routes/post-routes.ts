@@ -7,14 +7,15 @@ export const postRouter = Router()
 
 postRouter.post('', [
   check('user_id').not().isEmpty(),
-  check('sort_data').notEmpty()
+  check('sort_data').notEmpty(),
+  check('search_value').isString()
 ], (req: Request, res: Response) => {
   const isOkay = validationResult(req)
   if (!isOkay) {
     res.sendStatus(400)
   } else {
-    const { user_id, sort_data } = req.body
-    handleGetAllPosts(user_id, sort_data)
+    const { user_id, sort_data, search_value } = req.body
+    handleGetAllPosts(user_id, sort_data, search_value)
       .then(data => {
         res.send({
           status: 'OKAY',

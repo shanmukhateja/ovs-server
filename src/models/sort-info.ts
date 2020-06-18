@@ -13,15 +13,3 @@ export enum SortOrder {
   'asc' = 'ASC',
   'desc' = 'DESC'
 }
-
-export function processSortData(sort_type: string) {
-  if(sort_type == SortTypes.post_title) {
-    return 'posts.title'
-  } else if(sort_type == SortTypes.topic_title) {
-    return 'topics.title'
-  } else if(sort_type == SortTypes.post_created_at) {
-    return 'posts.created_at'
-  } else if(sort_type == SortTypes.user_name) {
-    return 'users.name'
-  }
-}

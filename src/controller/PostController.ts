@@ -2,34 +2,49 @@ import { getRepository } from "typeorm";
 import { Post } from "../db/entity/post";
 import { PostScore } from "../db/entity/post_score";
 import { User } from "../db/entity/user";
-import { ISortInfo, processSortData } from "../models/sort-info";
+import { ISortInfo, SortTypes } from "../models/sort-info";
+import { convertSearchSortDataColumn, getStartEndDates, postProcessPostData } from "../db/utils/post";
 
-export async function handleGetAllPosts(user_id, sort_data: ISortInfo) {
+export async function handleGetAllPosts(user_id, sort_data: ISortInfo, search_value: string) {
   const postRepo = getRepository(Post)
   const postScoreRepo = getRepository(PostScore)
-  const builder = postRepo.createQueryBuilder('posts')
-  return builder
+  const base = postRepo.createQueryBuilder('posts')
     .innerJoin('posts.user_id', 'user')
     .innerJoin('posts.topic_id', 'topics')
     .addSelect(['user.id', 'user.name']) // we only want user's name and id
     .where('posts.user_id = user.id')
-    .orderBy(processSortData(sort_data.type), sort_data.order)
-    .getMany()
-    // attach user's tbl_post_scores info so client can update UI.
-    .then(data => Promise.all(data.map(el => postScoreRepo.findOne({
-          where: {
-            post_id: el.id,
-            user_id
-          }
-        })
-        .then(data => {
-          return {
-            ...el,
-            user_post_score: data?.post_score
-          }
-        })
-      )
-    ))
+
+  // check if search str is date
+  const isDate = search_value.includes('-')
+  if (!isDate) {
+    return base
+      .where(`${convertSearchSortDataColumn(SortTypes.post_title)} LIKE :search_value`, {
+        search_value: `%${search_value}%`
+      })
+      .orWhere(`${convertSearchSortDataColumn(SortTypes.topic_title)} LIKE :search_value`, {
+        search_value: `%${search_value}%`
+      })
+      .orWhere(`${convertSearchSortDataColumn(SortTypes.user_name)} LIKE :search_value`, {
+        search_value: `%${search_value}%`
+      })
+      .orderBy(convertSearchSortDataColumn(sort_data.type), sort_data.order)
+      .getMany()
+      // attach user's tbl_post_scores info so client can update UI.
+      .then(data => postProcessPostData(data, user_id))
+  } else {
+    const { startDate, endDate } = getStartEndDates(search_value)
+    // is Date
+    return base
+    .where(`${convertSearchSortDataColumn(SortTypes.post_created_at)} BETWEEN :startDate AND :endDate`, {
+      startDate,
+      endDate
+    })
+    .orderBy(convertSearchSortDataColumn(sort_data.type), sort_data.order)
+      .getMany()
+      // attach user's tbl_post_scores info so client can update UI.
+      .then(data => postProcessPostData(data, user_id))
+  }
+
 }
 
 export async function handlePostScore(post_id, user_id, post_score) {
@@ -45,12 +60,12 @@ export async function handlePostScore(post_id, user_id, post_score) {
   // check if user eligible for voting
   const userRepo = getRepository(User)
   const userInfo = await userRepo.findOne({
-    where: {id: user_id}
+    where: { id: user_id }
   })
-  if(!userInfo) {
+  if (!userInfo) {
     throw new Error('User account doesn\'t exist')
   }
-  if(userInfo.user_type == 0) {
+  if (userInfo.user_type == 0) {
     // admins not allowed to vote
     throw new Error('Not allowed.')
   }
