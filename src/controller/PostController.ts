@@ -7,11 +7,11 @@ import { convertSearchSortDataColumn, getStartEndDates, postProcessPostData } fr
 
 export async function handleGetAllPosts(user_id, sort_data: ISortInfo, search_value: string) {
   const postRepo = getRepository(Post)
-  const postScoreRepo = getRepository(PostScore)
   const base = postRepo.createQueryBuilder('posts')
     .innerJoin('posts.user_id', 'user')
     .innerJoin('posts.topic_id', 'topics')
     .addSelect(['user.id', 'user.name']) // we only want user's name and id
+    .addSelect(['topics.id', 'topics.title']) // include topic title and id
     .where('posts.user_id = user.id')
 
   // check if search str is date
