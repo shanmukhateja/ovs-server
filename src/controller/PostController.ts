@@ -2,17 +2,18 @@ import { getRepository } from "typeorm";
 import { Post } from "../db/entity/post";
 import { PostScore } from "../db/entity/post_score";
 import { User } from "../db/entity/user";
+import { ISortInfo, processSortData } from "../models/sort-info";
 
-export async function handleGetAllPosts(user_id) {
+export async function handleGetAllPosts(user_id, sort_data: ISortInfo) {
   const postRepo = getRepository(Post)
   const postScoreRepo = getRepository(PostScore)
   const builder = postRepo.createQueryBuilder('posts')
-
   return builder
     .innerJoin('posts.user_id', 'user')
+    .innerJoin('posts.topic_id', 'topics')
     .addSelect(['user.id', 'user.name']) // we only want user's name and id
     .where('posts.user_id = user.id')
-    .orderBy('posts.created_at', 'DESC')
+    .orderBy(processSortData(sort_data.type), sort_data.order)
     .getMany()
     // attach user's tbl_post_scores info so client can update UI.
     .then(data => Promise.all(data.map(el => postScoreRepo.findOne({

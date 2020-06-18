@@ -5,16 +5,24 @@ import { handleError } from "../controller/BaseController";
 
 export const postRouter = Router()
 
-postRouter.get('', (req, res) => {
-  const { user_id } = req.query
-  handleGetAllPosts(user_id)
-    .then(data => {
-      res.send({
-        status: 'OKAY',
-        data
+postRouter.post('', [
+  check('user_id').not().isEmpty(),
+  check('sort_data').notEmpty()
+], (req: Request, res: Response) => {
+  const isOkay = validationResult(req)
+  if (!isOkay) {
+    res.sendStatus(400)
+  } else {
+    const { user_id, sort_data } = req.body
+    handleGetAllPosts(user_id, sort_data)
+      .then(data => {
+        res.send({
+          status: 'OKAY',
+          data
+        })
       })
-    })
-    .catch(err => handleError(err, res))
+      .catch(err => handleError(err, res))
+  }
 })
 
 /**
