@@ -37,7 +37,6 @@ export function convertSearchSortDataColumn(sort_type: string) {
 export function getStartEndDates(str: string) {
   let date: moment.Moment, startDate, endDate
   const isDateOnly = !str.includes(':')
-  console.log(`${str} isDateOnly: ${isDateOnly}`)
   try {
     // Check if time is provided
     if(!isDateOnly) {
@@ -51,12 +50,6 @@ export function getStartEndDates(str: string) {
       startDate = moment(date).startOf('day').add('5', 'hours').add('30', 'minutes')
       endDate = moment(date).endOf('day').add('5', 'hours').add('30', 'minutes')
     }
-    console.log(`date: ${date.toISOString()}`)
-    console.log(`date: ${date.toString()}`)
-    console.log(`startDate: ${startDate.toISOString()}`)
-    console.log(`startDate: ${startDate.toString()}`)
-    console.log(`endDate: ${endDate.toISOString()}`)
-    console.log(`endDate: ${endDate.toString()}`)
     return {
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString()
