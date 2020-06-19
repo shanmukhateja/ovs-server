@@ -78,7 +78,7 @@ export function handleGetPostResponses(post_id) {
     .then(data => {
       return data
     })*/
-    return postScoresRepo.createQueryBuilder('post_scores')
+  return postScoresRepo.createQueryBuilder('post_scores')
     .where('post_scores.post_id = :post_id', { post_id })
     .innerJoinAndSelect(User, 'users', '1')
     .select(['users.id', 'users.name', 'post_scores.post_score as user_score'])
@@ -109,50 +109,45 @@ export async function handlePostScore(post_id, user_id, post_score) {
     throw new Error('Not allowed.')
   }
   const postScoreRepo = getRepository(PostScore)
-  let postScoreData = null
+  let postScoreData: PostScore = null
 
-  try {
-    // Did this user interact with this post earlier?
-    postScoreData = await postScoreRepo.findOne({
-      where: {
-        post_id,
-        user_id
-      }
-    })
-    if (!postScoreData) {
-      // create row for this post for this user
-      postScoreData = await postScoreRepo.save({
-        id: null,
-        post_id,
-        post_score,
-        user_id
-      })
-    } else {
-      // user interaction for the post exists, update data
-      postScoreData = { ...postScoreData, post_score }
-      await postScoreRepo.update(postScoreData.id, postScoreData)
+  // Did this user interact with this post earlier?
+  postScoreData = await postScoreRepo.findOne({
+    where: {
+      post_id,
+      user_id
     }
-
-    // recount post score in post table
-    const postRepo = getRepository(Post)
-
-    const { sum } = await postScoreRepo
-      .createQueryBuilder('post_scores')
-      .select('SUM(post_score)', 'sum')
-      .where('post_scores.post_id = :post_id', { post_id })
-      .getRawOne()
-
-    return postRepo.createQueryBuilder()
-      .update()
-      .set({
-        post_counter: sum
-      })
-      .where('id = :post_id', { post_id })
-      .execute()
-
-  } catch (err) {
-    console.error(err)
+  })
+  if (!postScoreData) {
+    // create row for this post for this user
+    postScoreData = await postScoreRepo.save({
+      id: null,
+      post_id,
+      post_score,
+      user_id
+    })
+  } else {
+    // user interaction for the post exists, update data
+    postScoreData = { ...postScoreData, post_score }
+    await postScoreRepo.save(postScoreData)
   }
+
+  // recount post score in post table
+  const postRepo = getRepository(Post)
+ 
+  const { sum } = await postScoreRepo
+    .createQueryBuilder('post_scores')
+    .select('SUM(post_score)', 'sum')
+    .where('post_scores.post_id = :post_id', { post_id })
+    .getRawOne()
+ 
+  return postRepo.createQueryBuilder()
+    .update()
+    .set({
+      post_counter: sum
+    })
+    .where('id = :post_id', { post_id })
+    .execute()
 }
 
 export async function handlePostCreate(topic_id, title, description, user_id) {
