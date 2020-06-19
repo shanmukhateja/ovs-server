@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { validationResult, check } from "express-validator";
-import { handlePostScore, handlePostCreate, handleGetAllPosts } from "../controller/PostController";
+import { handlePostScore, handlePostCreate, handleGetAllPosts, handleGetPostResponses } from "../controller/PostController";
 import { handleError } from "../controller/BaseController";
 
 export const postRouter = Router()
@@ -25,6 +25,30 @@ postRouter.post('', [
         })
       })
       .catch(err => handleError(err, res))
+  }
+})
+
+postRouter.post('/view-responses', [
+  check('post_id').isNumeric()
+], (req: Request, res: Response) => {
+  const isOkay = validationResult(req)
+  if(!isOkay) {
+    res.sendStatus(400)
+  } else {
+    const {post_id} = req.body
+    handleGetPostResponses(post_id)
+    .then(resp => {
+      res.send({
+        status: 'OKAY',
+        data: resp
+      })
+    })
+    .catch(err => {
+      console.error(err)
+      res.send({
+        status: 'FAIL'
+      })
+    })
   }
 })
 
