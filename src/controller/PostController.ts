@@ -4,15 +4,32 @@ import { PostScore } from "../db/entity/post_score";
 import { User } from "../db/entity/user";
 import { ISortInfo, SortTypes } from "../models/sort-info";
 import { convertSearchSortDataColumn, getStartEndDates, postProcessPostData } from "../db/utils/post";
+import { IPaginationInfo } from "../models/pagination-info";
 
-export async function handleGetAllPosts(user_id, sort_data: ISortInfo, search_value: string) {
+export async function handleGetAllPosts(user_id, sort_data: ISortInfo, search_value: string, pagination_info: IPaginationInfo | number) {
+  // setup page_index value
+  let skip_index = 0
+  const items_count_per_page = pagination_info['itemsPerPage'] || 2
+  let page_index = parseInt(pagination_info['page']?.toString() || pagination_info)
+
+  if (page_index > 1) {
+    skip_index = (page_index - 1) * items_count_per_page
+  } else {
+    skip_index = 0
+  }
+
   const postRepo = getRepository(Post)
-  const base = postRepo.createQueryBuilder('posts')
+  let base = postRepo.createQueryBuilder('posts')
     .innerJoin('posts.user_id', 'user')
     .innerJoin('posts.topic_id', 'topics')
     .addSelect(['user.id', 'user.name']) // we only want user's name and id
     .addSelect(['topics.id', 'topics.title']) // include topic title and id
     .where('posts.user_id = user.id')
+
+    // total no. of rows (for Pagination)
+  const rows_count = await base.getCount()
+  base = base.skip(skip_index)
+    .take(items_count_per_page)
 
   // check if search str is date
   const isDate = search_value.includes('-')
@@ -30,19 +47,19 @@ export async function handleGetAllPosts(user_id, sort_data: ISortInfo, search_va
       .orderBy(convertSearchSortDataColumn(sort_data.type), sort_data.order)
       .getMany()
       // attach user's tbl_post_scores info so client can update UI.
-      .then(data => postProcessPostData(data, user_id))
+      .then(data => postProcessPostData(data, user_id, rows_count))
   } else {
     const { startDate, endDate } = getStartEndDates(search_value)
     // is Date
     return base
-    .where(`${convertSearchSortDataColumn(SortTypes.post_created_at)} BETWEEN :startDate AND :endDate`, {
-      startDate,
-      endDate
-    })
-    .orderBy(convertSearchSortDataColumn(sort_data.type), sort_data.order)
+      .where(`${convertSearchSortDataColumn(SortTypes.post_created_at)} BETWEEN :startDate AND :endDate`, {
+        startDate,
+        endDate
+      })
+      .orderBy(convertSearchSortDataColumn(sort_data.type), sort_data.order)
       .getMany()
       // attach user's tbl_post_scores info so client can update UI.
-      .then(data => postProcessPostData(data, user_id))
+      .then(data => postProcessPostData(data, user_id, rows_count))
   }
 
 }

@@ -4,7 +4,7 @@ import { Post } from "../entity/post"
 import { getRepository } from "typeorm"
 import { PostScore } from "../entity/post_score"
 
-export function postProcessPostData(data: Post[], user_id) {
+export function postProcessPostData(data: Post[], user_id, rows_count) {
   const postScoreRepo = getRepository(PostScore)
   return Promise.all(data.map(el => postScoreRepo.findOne({
     where: {
@@ -18,8 +18,8 @@ export function postProcessPostData(data: Post[], user_id) {
         user_post_score: data?.post_score
       }
     })
-  )
-  )
+  ))
+  .then(data => ({data, rows_count}))
 }
 
 export function convertSearchSortDataColumn(sort_type: string) {
@@ -39,11 +39,11 @@ export function getStartEndDates(str: string) {
   const isDateOnly = !str.includes(':')
   try {
     // Check if time is provided
-    if(!isDateOnly) {
+    if (!isDateOnly) {
       // time provided (need to subtract +05:30 to input to account for IST)
       date = moment(str, 'DD-MM-YYYY hh:mm').add('5', 'hours').add('30', 'minutes')
       startDate = moment(date).startOf('day')
-      endDate = moment(date).add('1','minute') // add leeway
+      endDate = moment(date).add('1', 'minute') // add leeway
     } else {
       // data only (need to subtract +05:30 to input to account for IST)
       date = moment(str, 'DD-MM-YYYY').add('5', 'hours').add('30', 'minutes')
