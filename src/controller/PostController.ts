@@ -66,24 +66,11 @@ export async function handleGetAllPosts(user_id, sort_data: ISortInfo, search_va
 
 export function handleGetPostResponses(post_id) {
   const postScoresRepo = getRepository(PostScore)
-  const postRepo = getRepository(Post)
-
-  // find all post_scores of given post_id with user's name
-  /*return postRepo.createQueryBuilder('posts')
-    .leftJoinAndSelect(PostScore, 'post_scores', 'post_scores.post_id = posts.id')
-    .innerJoinAndSelect(User, 'users')
-    .select(['posts.id', 'posts.title', 'post_scores.post_score', 'users.id', 'users.name'])
-    .where('posts.id = :post_id', { post_id })
-    .getRawMany()
-    .then(data => {
-      return data
-    })*/
   return postScoresRepo.createQueryBuilder('post_scores')
     .where('post_scores.post_id = :post_id', { post_id })
     .innerJoinAndSelect(User, 'users', '1')
-    .select(['users.id', 'users.name', 'post_scores.post_score as user_score'])
+    .select(['users.id AS user_id', 'users.name AS user_name', 'post_scores.post_score as user_score'])
     .getRawMany()
-
 }
 
 export async function handlePostScore(post_id, user_id, post_score) {
