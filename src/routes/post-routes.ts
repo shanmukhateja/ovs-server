@@ -102,7 +102,7 @@ postRouter.delete('', [
   if(!isOkay) {
     res.sendStatus(400)
   } else {
-    const {post_id} = req.body
+    const {post_id} = req.query
     handleDeletePost(post_id)
     .then(_ => res.send({
       status: 'OKAY'
