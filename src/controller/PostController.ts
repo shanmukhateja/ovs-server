@@ -149,3 +149,18 @@ export async function handlePostCreate(topic_id, title, description, user_id) {
     title
   })
 }
+
+export async function handleDeletePost(post_id) {
+  const postRepo = getRepository(Post)
+  const postScoreRepo = getRepository(PostScore)
+  // delete post scores info of Post
+  await postScoreRepo.createQueryBuilder()
+  .delete()
+  .where('post_id = :post_id', {post_id})
+  .execute()
+  // delete Post
+  return postRepo.createQueryBuilder()
+  .delete()
+  .where('id = :post_id', {post_id})
+  .execute()
+}

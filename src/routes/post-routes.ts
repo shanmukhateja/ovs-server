@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { validationResult, check } from "express-validator";
-import { handlePostScore, handlePostCreate, handleGetAllPosts, handleGetPostResponses } from "../controller/PostController";
+import { handlePostScore, handlePostCreate, handleGetAllPosts, handleGetPostResponses, handleDeletePost } from "../controller/PostController";
 import { handleError } from "../controller/BaseController";
 
 export const postRouter = Router()
@@ -92,5 +92,21 @@ postRouter.post('/add', [
     handlePostCreate(topic_id, post_title, post_descr, user_id)
       .then(_ => res.send({ status: 'OKAY' }))
       .catch(err => handleError(err, res))
+  }
+})
+
+postRouter.delete('', [
+  check('post_id').isNumeric()
+], (req: Request, res: Response) => {
+  const isOkay = validationResult(req)
+  if(!isOkay) {
+    res.sendStatus(400)
+  } else {
+    const {post_id} = req.body
+    handleDeletePost(post_id)
+    .then(_ => res.send({
+      status: 'OKAY'
+    }))
+    .catch(err => handleError(err, res))
   }
 })
