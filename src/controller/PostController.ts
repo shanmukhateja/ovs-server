@@ -142,7 +142,7 @@ export async function handlePostCreate(topic_id, title, description, user_id) {
 
   return postRepo.save({
     description,
-    post_counter: 1,
+    post_counter: 0,
     id: null,
     topic_id,
     user_id,
