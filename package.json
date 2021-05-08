@@ -21,7 +21,7 @@
     "moment": "^2.26.0",
     "sqlite3": "^4.2.0",
     "tsc-watch": "^4.2.8",
-    "typeorm": "^0.2.4"
+    "typeorm": "^0.2.25"
   },
   "scripts": {
     "start": "tsc-watch --onSuccess \"node dist/index.js\""
